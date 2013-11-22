@@ -37,6 +37,7 @@ public class GameClient implements ApplicationListener {
 	private TcpClient tcpClient;		// A network thread to communicate with the server
 	private HUD hud;					// The heads up display
 	private Game game;					// The second and final state of the game
+	private Sounds sounds;
 	
 	// Game variables
 	private boolean moved;
@@ -47,12 +48,13 @@ public class GameClient implements ApplicationListener {
 
 	@Override
 	public void create() {
+		this.sounds = new Sounds();
 		this.world = new World(50);
 		this.otherPlayers = new OtherPlayers(16, this.world.getMapScale(), this.vertexBuffer);
 		this.tcpClient = new TcpClient("89.17.129.52", 5050, this.world, this.otherPlayers);
 		this.connecting = new Connecting(this.tcpClient);
 		this.hud = new HUD(this.otherPlayers);
-		this.player = new Player(this.world, this.hud, this.tcpClient, this.otherPlayers);
+		this.player = new Player(this.world, this.hud, this.tcpClient, this.otherPlayers, this.sounds);
 		this.game = new Game(this.player);
 		
 		this.world.setTcpClient(this.tcpClient);

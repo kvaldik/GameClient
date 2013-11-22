@@ -20,6 +20,7 @@ public class Player implements InputProcessor {
 	private HUD hud;
 	private World world;
 	private OtherPlayers otherPlayers;
+	private Sounds sounds;
 	
 	// Mouse movements
 	private int mouseX;				// Position of the mouse
@@ -37,11 +38,12 @@ public class Player implements InputProcessor {
 	private boolean onGround;	// Indicates if the player is on ground or not
 	
 	
-	public Player(World world, HUD newHud, TcpClient newTcpClient, OtherPlayers newOtherPlayers) {
+	public Player(World world, HUD newHud, TcpClient newTcpClient, OtherPlayers newOtherPlayers, Sounds newSounds) {
 		this.world = world;
 		this.hud = newHud;
 		this.tcpClient = newTcpClient;
 		this.otherPlayers = newOtherPlayers;
+		this.sounds = newSounds;
 		
 		this.mouseX = Gdx.input.getX();
 		this.mouseY = Gdx.input.getY();
@@ -220,8 +222,10 @@ public class Player implements InputProcessor {
 		if (Input.Keys.Q == arg0)
 			this.hud.changeGunOrBox();
 		// Reload
-		if (Input.Keys.R == arg0)
+		if (Input.Keys.R == arg0) {
 			this.otherPlayers.reload();
+			this.sounds.playReload();
+		}
 		return false;
 	}
 
@@ -255,11 +259,18 @@ public class Player implements InputProcessor {
 		if (arg3 == Input.Buttons.LEFT)
 			if (this.hud.gunOrBox)
 				this.removeBlock();
-			// If the player isn't reloading and has ammo (checked in reloading too) he can shoot
-			else if (!this.otherPlayers.getReloading()){
-				this.otherPlayers.shoot();
-				this.tcpClient.shoot(this.camera.position.x, this.camera.position.y, this.camera.position.z,
-						 			 this.camera.direction.x, this.camera.direction.y, this.camera.direction.z);
+			// Else he has the gun equipped
+			else {
+				// If the player isn't reloading and has ammo (checked in reloading too) he can shoot
+				if (!this.otherPlayers.getReloading()) {
+					this.otherPlayers.shoot();
+					this.tcpClient.shoot(this.camera.position.x, this.camera.position.y, this.camera.position.z,
+							 			 this.camera.direction.x, this.camera.direction.y, this.camera.direction.z);
+					this.sounds.playGunShot();
+				}
+				else {
+					this.sounds.playGunEmpty();
+				}
 			}
 		if (arg3 == Input.Buttons.RIGHT)
 			if (this.hud.gunOrBox)

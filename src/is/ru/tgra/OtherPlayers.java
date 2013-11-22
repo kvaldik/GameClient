@@ -194,7 +194,7 @@ public class OtherPlayers {
 		this.fWriteLock.lock();
 		try {
 			this.reloadingCurrentTime = System.currentTimeMillis();
-			if (this.isReloading && this.reloadingStartTime+2000 < this.reloadingCurrentTime) {
+			if (this.isReloading && this.reloadingStartTime+3000 < this.reloadingCurrentTime) {
 				this.isReloading = false;
 				this.ammo = 5;
 			}
