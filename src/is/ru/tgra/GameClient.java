@@ -120,5 +120,8 @@ public class GameClient implements ApplicationListener {
 	}
 	@Override public void pause() {}
 	@Override public void resume() {}
-	@Override public void dispose() {}
+	@Override public void dispose() {
+		System.out.printf("Exiting the game! \n");
+		this.tcpClient.dispose();
+	}
 }

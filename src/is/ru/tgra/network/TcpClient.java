@@ -7,6 +7,9 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+
+import com.badlogic.gdx.Gdx;
+
 import is.ru.tgra.World;
 import is.ru.tgra.OtherPlayers;
 
@@ -33,6 +36,7 @@ public class TcpClient extends Thread {
 	
 	// TcpClient variables
 	private int playerId;
+	private boolean alive;
 	
 	// Constructor
 	public TcpClient(String hostname, int port, World newWorld, OtherPlayers newOtherPlayers) {
@@ -51,6 +55,7 @@ public class TcpClient extends Thread {
 			
 			this.iStream = this.socket.getInputStream();
 			this.oiStream = new ObjectInputStream(iStream);
+			this.alive = true;
 		}
 		catch (UnknownHostException e) {
 			System.out.println("Don't know about host: " + hostname);
@@ -67,46 +72,50 @@ public class TcpClient extends Thread {
 	public void run() {
 		TcpPayload payload;
 		
-		while (true) {
-			try {
+		try {
+			while (alive) {
 		    	payload = new TcpPayload(0);
 				payload = (TcpPayload) oiStream.readObject();
-				switch (payload.typeOfPayload) {
-				case 10: // Player connected
-					this.otherPlayers.newPlayer(payload.playerId, payload.message);
-					break;
-				case 20: // Player disconnected
-					this.otherPlayers.removePlayer(payload.playerId);
-					break;
-				case 30: // Player position update
-					this.otherPlayers.UpdatePlayer(payload.playerId, payload.playerPosX, payload.playerPosY, payload.playerPosZ,
-												   payload.playerDirX, payload.playerDirY, payload.playerDirZ);
-					break;
-				case 40: // Map update (changed block)
-					this.world.changeBlock(payload.mapX, payload.mapY, payload.mapZ, payload.mapValue);
-					break;
-				case 60: // Someone got hit (might be this player)
-					// Check if it was the current player that got hit, else do nothing
-					if (payload.playerId2 == this.playerId) {
-						this.otherPlayers.takeAHit(25);
+				// Sometimes readObject() will return null, don't know why!
+				if (payload != null) {
+					switch (payload.typeOfPayload) {
+					case 10: // Player connected
+						this.otherPlayers.newPlayer(payload.playerId, payload.message);
+						break;
+					case 20: // Player disconnected
+						this.otherPlayers.removePlayer(payload.playerId);
+						break;
+					case 30: // Player position update
+						this.otherPlayers.UpdatePlayer(payload.playerId, payload.playerPosX, payload.playerPosY, payload.playerPosZ,
+													   payload.playerDirX, payload.playerDirY, payload.playerDirZ);
+						break;
+					case 40: // Map update (changed block)
+						this.world.changeBlock(payload.mapX, payload.mapY, payload.mapZ, payload.mapValue);
+						break;
+					case 60: // Someone got hit (might be this player)
+						// Check if it was the current player that got hit, else do nothing
+						if (payload.playerId2 == this.playerId) {
+							this.otherPlayers.takeAHit(25);
+						}
+						break;
+					case 70: // Someone got a fatal hit (might be this player)
+						// Check if it was the current player that got hit, else do nothing
+						if (payload.playerId2 == this.playerId) {
+							this.otherPlayers.takeAHit(25);
+						}
+						this.otherPlayers.addKill(payload.playerId);
+						this.otherPlayers.addDeath(payload.playerId2);
+						break;
+					default:
+						break;
 					}
-					break;
-				case 70: // Someone got a fatal hit (might be this player)
-					// Check if it was the current player that got hit, else do nothing
-					if (payload.playerId2 == this.playerId) {
-						this.otherPlayers.takeAHit(25);
-					}
-					this.otherPlayers.addKill(payload.playerId);
-					this.otherPlayers.addDeath(payload.playerId2);
-					break;
-				default:
-					break;
 				}
 			}
-			catch (ClassNotFoundException | IOException e) {
-				System.out.printf("Error in TcpClient, run() \n");
-				e.printStackTrace();
-			}
+		}
+		catch (ClassNotFoundException | IOException e) {
+			System.out.printf("Error in TcpClient, run() \n");
+			e.printStackTrace();
+			Gdx.app.exit();
 		}
 	}
 	
@@ -118,7 +127,8 @@ public class TcpClient extends Thread {
 		payload.mapZ = z;
 		payload.mapValue = newValue;
 		try {
-	    	ooStream.writeObject(payload);
+	    	this.ooStream.writeObject(payload);
+	    	this.ooStream.flush();
 		}
 		catch (IOException e) {
 			System.out.printf("Error in TcpClient, updateMap() \n");
@@ -138,6 +148,7 @@ public class TcpClient extends Thread {
     	payload.playerDirZ = dirZ;
 		try {
 	    	ooStream.writeObject(payload);
+	    	this.ooStream.flush();
 		}
 		catch (IOException e) {
 			System.out.printf("Error in TcpClient, update() \n");
@@ -157,6 +168,7 @@ public class TcpClient extends Thread {
     	payload.playerDirZ = dirZ;
 		try {
 	    	ooStream.writeObject(payload);
+	    	this.ooStream.flush();
 		}
 		catch (IOException e) {
 			System.out.printf("Error in TcpClient, shoot() \n");
@@ -173,6 +185,7 @@ public class TcpClient extends Thread {
     	
 		try {
 			ooStream.writeObject(payload);
+	    	this.ooStream.flush();
 			
 	    	// Get response from the server
 	    	payload = new TcpPayloadInit(0);
@@ -189,6 +202,17 @@ public class TcpClient extends Thread {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	public void dispose() {
+		System.out.printf("Cleaning up a TcpClient thread! \n");
+		this.alive = false;
+		try {
+			this.socket.close();
+		} catch (IOException e) {
+			System.out.printf("Error in TcpClient, dispose() \n");
+			e.printStackTrace();
+		}
 	}
 	
 	/*
