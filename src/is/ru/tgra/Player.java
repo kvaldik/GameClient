@@ -219,8 +219,10 @@ public class Player implements InputProcessor {
 			if (Input.Keys.ESCAPE == arg0) 
 				Gdx.app.exit();
 			// Turn the mouse on and off
-			if (Input.Keys.P == arg0)
+			if (Input.Keys.P == arg0) {
 				this.mouseMovement = !this.mouseMovement;
+				Gdx.input.setCursorCatched(this.mouseMovement);
+			}
 			// Draw the score board
 			if (Input.Keys.TAB == arg0)
 				this.hud.drawScoreBoard();

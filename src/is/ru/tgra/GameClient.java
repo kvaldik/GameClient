@@ -103,6 +103,7 @@ public class GameClient implements ApplicationListener {
 			this.vertexBuffer = this.game.getVertexBuffer();
 			this.otherPlayers.setVertexBuffer(vertexBuffer);
 			this.otherPlayers.setPlayerId(this.tcpClient.getPlayerId());
+			Gdx.input.setCursorCatched(this.player.getMouseMovement());
 			// Start the network thread to get changes from the server
 			this.tcpClient.start();
 			this.connecting.doneConnecting = false;		// Done preparing the next state
