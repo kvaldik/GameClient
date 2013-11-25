@@ -174,7 +174,7 @@ public class OtherPlayers {
 						Gdx.gl11.glMaterialfv(GL11.GL_FRONT, GL11.GL_DIFFUSE, new float[] {this.playersColorR[i], this.playersColorG[i], this.playersColorB[i], 1.0f}, 0);
 						Gdx.gl11.glPushMatrix();
 						Gdx.gl11.glTranslatef(this.playersPosX[i], this.playersPosY[i]-6f, this.playersPosZ[i]);
-						Gdx.gl11.glRotatef(180, 0, 1, 0);
+						Gdx.gl11.glRotatef(this.angleOfPlayer(i)-90, 0, 1, 0);
 						Gdx.gl11.glScalef(this.mapScale, this.mapScale, this.mapScale);
 						model.render();
 						Gdx.gl11.glPopMatrix();
@@ -187,6 +187,17 @@ public class OtherPlayers {
 		} finally {
 			this.fReadLock.unlock();
 		}
+	}
+	
+	private float angleOfPlayer(int playerId) {
+		float x = this.playersDirX[playerId];
+		float z = this.playersDirZ[playerId];
+		float returnValue = (float)Math.toDegrees(Math.atan(x/z));
+		if (z == 0)
+			z = 0.00000000000001f;
+		if (z < 0)
+			returnValue += 180.0f;
+		return returnValue;
 	}
 	
 	// Update the status of other players (reload)
@@ -406,6 +417,15 @@ public class OtherPlayers {
 		this.fReadLock.lock();
 		try {
 			return this.selectedBlock;
+		} finally {
+			this.fReadLock.unlock();
+		}
+	}
+	
+	public String getCurrentPlayerNick() {
+		this.fReadLock.lock();
+		try {
+			return this.playersNicks[this.playerId];
 		} finally {
 			this.fReadLock.unlock();
 		}

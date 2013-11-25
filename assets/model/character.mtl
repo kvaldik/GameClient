@@ -1,10 +1,19 @@
-# Blender MTL File: 'None'
-# Material Count: 2
+# Blender MTL File: 'blendzorro.zorrofinalAplha.blend'
+# Material Count: 4
 
-newmtl Material.004
+newmtl Material
 Ns 96.078431
 Ka 0.000000 0.000000 0.000000
-Kd 0.640000 0.640000 0.640000
+Kd 0.000000 0.000000 0.000000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl Material.004
+Ns 92.156863
+Ka 0.000000 0.000000 0.000000
+Kd 0.512000 0.512000 0.512000
 Ks 0.500000 0.500000 0.500000
 Ni 1.000000
 d 1.000000
@@ -16,4 +25,13 @@ Ka 0.000000 0.000000 0.000000
 Kd 0.8 0.8 0.8
 Ks 0.8 0.8 0.8
 d 1
+illum 2
+
+newmtl zorro
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.343381 0.000000 0.337248
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
 illum 2

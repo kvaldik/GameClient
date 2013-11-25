@@ -7,9 +7,12 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.badlogic.gdx.Gdx;
 
+import is.ru.tgra.HUD;
 import is.ru.tgra.World;
 import is.ru.tgra.OtherPlayers;
 
@@ -26,6 +29,7 @@ public class TcpClient extends Thread {
 	// Parts of the game client
 	private World world;
 	private OtherPlayers otherPlayers;
+	private HUD hud;
 
 	// TcpClient tools
 	private Socket socket;
@@ -38,11 +42,16 @@ public class TcpClient extends Thread {
 	private int playerId;
 	private boolean alive;
 	
+	// Locks for threading
+	private final ReentrantReadWriteLock fLock = new ReentrantReadWriteLock();
+	private final Lock fWriteLock = fLock.writeLock();
+	
 	// Constructor
-	public TcpClient(String hostname, int port, World newWorld, OtherPlayers newOtherPlayers) {
+	public TcpClient(String hostname, int port, World newWorld, OtherPlayers newOtherPlayers, HUD newHud) {
 		// Get game client parts
 		this.world = newWorld;
 		this.otherPlayers = newOtherPlayers;
+		this.hud = newHud;
 		// Set the player id to -1 since it hasn't been allocated by the server
 		this.playerId = -1;
 		
@@ -105,6 +114,10 @@ public class TcpClient extends Thread {
 						}
 						this.otherPlayers.addKill(payload.playerId);
 						this.otherPlayers.addDeath(payload.playerId2);
+						this.hud.addStatusText(String.format("%s KILLED %s", this.otherPlayers.getPlayersNick(payload.playerId), this.otherPlayers.getPlayersNick(payload.playerId2)));
+						break;
+					case 80: // Chat message
+						this.hud.addStatusText(String.format("%s: %s", this.otherPlayers.getPlayersNick(payload.playerId), payload.message));
 						break;
 					default:
 						break;
@@ -119,6 +132,25 @@ public class TcpClient extends Thread {
 		}
 	}
 	
+	// The sendChat functions sends a chat message to the server
+	public void sendChat(String chatMessage) {
+		TcpPayload payload = new TcpPayload(80);
+		payload.playerId = this.playerId;
+		payload.message = chatMessage;
+		this.fWriteLock.lock();
+		try {
+	    	this.ooStream.writeObject(payload);
+	    	this.ooStream.flush();
+		}
+		catch (IOException e) {
+			System.out.printf("Error in TcpClient, sendChat() \n");
+			e.printStackTrace();
+		}
+		finally {
+			this.fWriteLock.unlock();
+		}
+	}
+	
 	// The updateMap functions updates a block in the map
 	public void updateMap(int x, int y, int z, byte newValue) {
 		TcpPayload payload = new TcpPayload(40);
@@ -126,6 +158,7 @@ public class TcpClient extends Thread {
 		payload.mapY = y;
 		payload.mapZ = z;
 		payload.mapValue = newValue;
+		this.fWriteLock.lock();
 		try {
 	    	this.ooStream.writeObject(payload);
 	    	this.ooStream.flush();
@@ -133,6 +166,9 @@ public class TcpClient extends Thread {
 		catch (IOException e) {
 			System.out.printf("Error in TcpClient, updateMap() \n");
 			e.printStackTrace();
+		}
+		finally {
+			this.fWriteLock.unlock();
 		}
 	}
 	
@@ -146,6 +182,7 @@ public class TcpClient extends Thread {
     	payload.playerDirX = dirX;
     	payload.playerDirY = dirY;
     	payload.playerDirZ = dirZ;
+    	this.fWriteLock.lock();
 		try {
 	    	ooStream.writeObject(payload);
 	    	this.ooStream.flush();
@@ -153,6 +190,9 @@ public class TcpClient extends Thread {
 		catch (IOException e) {
 			System.out.printf("Error in TcpClient, update() \n");
 			e.printStackTrace();
+		}
+		finally {
+			this.fWriteLock.unlock();
 		}
 	}
 	
@@ -166,6 +206,7 @@ public class TcpClient extends Thread {
     	payload.playerDirX = dirX;
     	payload.playerDirY = dirY;
     	payload.playerDirZ = dirZ;
+    	this.fWriteLock.lock();
 		try {
 	    	ooStream.writeObject(payload);
 	    	this.ooStream.flush();
@@ -173,6 +214,9 @@ public class TcpClient extends Thread {
 		catch (IOException e) {
 			System.out.printf("Error in TcpClient, shoot() \n");
 			e.printStackTrace();
+		}
+		finally {
+			this.fWriteLock.unlock();
 		}
 	}
 	

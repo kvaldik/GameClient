@@ -1,5 +1,8 @@
 package is.ru.tgra;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL11;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -33,6 +36,11 @@ public class HUD {
 	private long currentTime = 0;
 	public boolean gunOrBox;
 	
+	// Chat and status text
+	public boolean isChating;
+	public String chatMessage;
+	public List<StatusText> statusTexts;
+	
 	// Rendering variables
 	private SpriteBatch spriteBatch; 
 	private BitmapFont font;
@@ -65,6 +73,11 @@ public class HUD {
 		pixmap.fillRectangle(0, 0, 2048, 2048);
 		this.dead = new Texture(pixmap);
 		pixmap.dispose();
+		
+		// Chat
+		this.isChating = false;
+		this.chatMessage = "";
+		this.statusTexts = new LinkedList<StatusText>();
 	}
 	
 	// Draw the HUD
@@ -133,12 +146,31 @@ public class HUD {
 			}
 		}
 		
+		// Chat
+		this.font.setColor(1f,0f,0f, 1f);
+		this.font.setScale(1.5f);
+		
+		if (this.isChating)
+			this.font.draw(this.spriteBatch, String.format("Say: %s", this.chatMessage), -64, -64);
+
+		for (int i = 0; i < this.statusTexts.size(); i++) {
+			this.font.draw(this.spriteBatch, this.statusTexts.get(i).message, -Gdx.graphics.getWidth()/2+5, -25*i);
+			this.currentTime = System.currentTimeMillis();
+			if (this.statusTexts.get(i).timeInserted + 5000 < this.currentTime)
+				this.statusTexts.remove(i);
+		}
+		
 		this.spriteBatch.end();
 	}
 	
 	/*
 	 * Get and set	
 	 */
+	public void addStatusText(String message) {
+		StatusText newStatusText = new StatusText(message, System.currentTimeMillis());
+		this.statusTexts.add(newStatusText);
+	}
+	
 	public void setHurt() {
 		this.isHurt = true;
 		this.hurtStartTime = System.currentTimeMillis();

@@ -62,65 +62,69 @@ public class Player implements InputProcessor {
 		Vector3 ble = new Vector3(this.camera.up.x, this.camera.up.y, this.camera.up.z);
 		ble.crs(this.camera.direction);
 		
-		// Mouse movement
-		if (mouseMovement) {
-			int movedX = this.mouseX - this.mouseXm;
-			int movedY = this.mouseY - this.mouseYm;
-			if (this.mouseUpdate) {
-				if(movedY < 0) 
-					this.camera.rotate(-10*movedY*deltaTime, ble.x, ble.y, ble.z);
-				if(movedY > 0) 
-					this.camera.rotate(-10*movedY*deltaTime, ble.x, ble.y, ble.z);
-				if(movedX > 0)
-					this.camera.rotate(10*movedX*deltaTime, 0, 1, 0);
-				if(movedX < 0)
-					this.camera.rotate(10*movedX*deltaTime, 0, 1, 0);
-				this.mouseUpdate = false;
+		// Don't move if the player is entering a chat message
+		if (!this.hud.isChating) {
+			// Mouse movement
+			if (mouseMovement) {
+				int movedX = this.mouseX - this.mouseXm;
+				int movedY = this.mouseY - this.mouseYm;
+				if (this.mouseUpdate) {
+					if(movedY < 0) 
+						this.camera.rotate(-10*movedY*deltaTime, ble.x, ble.y, ble.z);
+					if(movedY > 0) 
+						this.camera.rotate(-10*movedY*deltaTime, ble.x, ble.y, ble.z);
+					if(movedX > 0)
+						this.camera.rotate(10*movedX*deltaTime, 0, 1, 0);
+					if(movedX < 0)
+						this.camera.rotate(10*movedX*deltaTime, 0, 1, 0);
+					this.mouseUpdate = false;
+				}
+				
+				Gdx.input.setCursorPosition(500, 500);
+				this.mouseX = Gdx.input.getX();
+				this.mouseY = Gdx.input.getY();
+				this.mouseXm = 0;
+				this.mouseYm = 0;
+				returnValue = true;
 			}
 			
-			Gdx.input.setCursorPosition(500, 500);
-			this.mouseX = Gdx.input.getX();
-			this.mouseY = Gdx.input.getY();
-			this.mouseXm = 0;
-			this.mouseYm = 0;
-		}
-		
-		// Move the player
-		if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-			if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT))
-				this.move(20*this.camera.direction.x*deltaTime, 20*this.camera.direction.z*deltaTime);
-			else
-				this.move(10*this.camera.direction.x*deltaTime, 10*this.camera.direction.z*deltaTime);
-			returnValue = true;
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-			this.move(-10*this.camera.direction.x*deltaTime, -10*this.camera.direction.z*deltaTime);
-			returnValue = true;
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-			this.strafe(10*ble.x*deltaTime, 10*ble.z*deltaTime);
-			returnValue = true;
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-			this.strafe(-10*ble.x*deltaTime, -10*ble.z*deltaTime);
-			returnValue = true;
-		}
-		
-		// Rotate the camera manually
-		if (Gdx.input.isKeyPressed(Input.Keys.UP))
-			this.camera.rotate(90*deltaTime, ble.x, ble.y, ble.z);
-		if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-			this.camera.rotate(-90*deltaTime, ble.x, ble.y, ble.z);
-		if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-			this.camera.rotate(90*deltaTime, 0, 1, 0);
-		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-			this.camera.rotate(-90*deltaTime, 0, 1, 0);
-		
-		// Jump
-		if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
-			if (this.onGround) {
-				this.speedY = 30.0f;
-				this.onGround = false;
+			// Move the player
+			if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+				if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT))
+					this.move(20*this.camera.direction.x*deltaTime, 20*this.camera.direction.z*deltaTime);
+				else
+					this.move(10*this.camera.direction.x*deltaTime, 10*this.camera.direction.z*deltaTime);
+				returnValue = true;
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+				this.move(-10*this.camera.direction.x*deltaTime, -10*this.camera.direction.z*deltaTime);
+				returnValue = true;
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+				this.strafe(10*ble.x*deltaTime, 10*ble.z*deltaTime);
+				returnValue = true;
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+				this.strafe(-10*ble.x*deltaTime, -10*ble.z*deltaTime);
+				returnValue = true;
+			}
+			
+			// Rotate the camera manually
+			if (Gdx.input.isKeyPressed(Input.Keys.UP))
+				this.camera.rotate(90*deltaTime, ble.x, ble.y, ble.z);
+			if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
+				this.camera.rotate(-90*deltaTime, ble.x, ble.y, ble.z);
+			if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
+				this.camera.rotate(90*deltaTime, 0, 1, 0);
+			if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
+				this.camera.rotate(-90*deltaTime, 0, 1, 0);
+			
+			// Jump
+			if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+				if (this.onGround) {
+					this.speedY = 30.0f;
+					this.onGround = false;
+				}
 			}
 		}
 		
@@ -209,22 +213,47 @@ public class Player implements InputProcessor {
 	
 	@Override
 	public boolean keyUp(int arg0) {
-		// Exit the game
-		if (Input.Keys.ESCAPE == arg0) 
-			Gdx.app.exit();
-		// Turn the mouse on and off
-		if (Input.Keys.P == arg0)
-			this.mouseMovement = !this.mouseMovement;
-		// Draw the score board
-		if (Input.Keys.TAB == arg0)
-			this.hud.drawScoreBoard();
-		// Change between placing blocks or shooting
-		if (Input.Keys.Q == arg0)
-			this.hud.changeGunOrBox();
-		// Reload
-		if (Input.Keys.R == arg0) {
-			this.otherPlayers.reload();
-			this.sounds.playReload();
+		// If a player isn't entering a chat message, actions are allowed
+		if (!this.hud.isChating) {
+			// Exit the game
+			if (Input.Keys.ESCAPE == arg0) 
+				Gdx.app.exit();
+			// Turn the mouse on and off
+			if (Input.Keys.P == arg0)
+				this.mouseMovement = !this.mouseMovement;
+			// Draw the score board
+			if (Input.Keys.TAB == arg0)
+				this.hud.drawScoreBoard();
+			// Change between placing blocks or shooting
+			if (Input.Keys.Q == arg0)
+				this.hud.changeGunOrBox();
+			// Reload
+			if (Input.Keys.R == arg0) {
+				this.otherPlayers.reload();
+				this.sounds.playReload();
+			}
+			// Start a chat message
+			if (Input.Keys.Y == arg0)
+				this.hud.isChating = true;
+		}
+		// Else the player is entering a chat message
+		else {
+			// Exit chat mode
+			if (Input.Keys.ESCAPE == arg0) 
+				this.hud.isChating = false;
+			// Send a chat message
+			if (Input.Keys.ENTER == arg0 && this.hud.isChating) {
+				this.tcpClient.sendChat(this.hud.chatMessage);
+				this.hud.addStatusText(String.format("%s: %s", this.otherPlayers.getCurrentPlayerNick(), this.hud.chatMessage));
+				this.hud.isChating = false;
+				this.hud.chatMessage = "";
+			}
+			// Remove a character from a chat message
+			if (Input.Keys.BACKSPACE == arg0 && this.hud.isChating) {
+				if (this.hud.chatMessage.length() > 1) {
+					this.hud.chatMessage = this.hud.chatMessage.substring(0, this.hud.chatMessage.length()-2);
+				}
+			}
 		}
 		return false;
 	}
@@ -242,11 +271,16 @@ public class Player implements InputProcessor {
 	public boolean keyDown(int arg0) {return false;}
 
 	@Override
-	public boolean keyTyped(char arg0) {return false;}
+	public boolean keyTyped(char arg0) {
+		if (this.hud.isChating)
+			//if (Input.Keys.BACKSPACE == (int)arg0)
+				//System.out.printf("BackSpace \n");
+			this.hud.chatMessage += arg0;
+		return false;
+	}
 
 	@Override
 	public boolean scrolled(int arg0) {
-		System.out.printf("Scorlling: %d \n", arg0);
 		if (arg0 < 0)
 			this.otherPlayers.decSelectedBlock();
 		else

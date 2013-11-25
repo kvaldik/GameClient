@@ -51,9 +51,9 @@ public class GameClient implements ApplicationListener {
 		this.sounds = new Sounds();
 		this.world = new World(50);
 		this.otherPlayers = new OtherPlayers(16, this.world.getMapScale(), this.vertexBuffer);
-		this.tcpClient = new TcpClient("89.17.129.52", 5050, this.world, this.otherPlayers);
-		this.connecting = new Connecting(this.tcpClient);
 		this.hud = new HUD(this.otherPlayers);
+		this.tcpClient = new TcpClient("89.17.129.52", 5050, this.world, this.otherPlayers, this.hud);
+		this.connecting = new Connecting(this.tcpClient);
 		this.player = new Player(this.world, this.hud, this.tcpClient, this.otherPlayers, this.sounds);
 		this.game = new Game(this.player);
 		
